@@ -8,7 +8,6 @@ import jax
 import numpy as np
 
 from flax import struct
-import snappy
 
 from slimsac.sample_collection.samplers import Uniform, Prioritized
 
@@ -23,44 +22,13 @@ class TransitionElement:
 
 
 class ReplayElement(struct.PyTreeNode):
-    """A single replay transition element supporting compression."""
+    """A single replay transition element."""
 
     state: np.ndarray[np.float64]
-    action: np.uint
+    action: np.float32
     reward: np.float32
     next_state: np.ndarray[np.float64]
     is_terminal: bool
-
-    @staticmethod
-    def compress(buffer: np.ndarray) -> np.ndarray:
-        compressed = np.frombuffer(snappy.compress(buffer), dtype=np.uint8)
-
-        return np.array(
-            (compressed, buffer.shape, buffer.dtype.str),
-            dtype=[
-                ("data", "u1", compressed.shape),
-                ("shape", "i4", (len(buffer.shape),)),
-                ("dtype", f"S{len(buffer.dtype.str)}"),
-            ],
-        )
-
-    @staticmethod
-    def uncompress(compressed: np.ndarray) -> np.ndarray:
-        shape = tuple(compressed["shape"])
-        dtype = compressed["dtype"].item()
-        compressed_bytes = compressed["data"].tobytes()
-        uncompressed = snappy.uncompress(compressed_bytes)
-        return np.ndarray(shape=shape, dtype=dtype, buffer=uncompressed)
-
-    def pack(self):
-        return self.replace(
-            state=ReplayElement.compress(self.state), next_state=ReplayElement.compress(self.next_state)
-        )
-
-    def unpack(self):
-        return self.replace(
-            state=ReplayElement.uncompress(self.state), next_state=ReplayElement.uncompress(self.next_state)
-        )
 
 
 class ReplayBuffer:
@@ -72,7 +40,6 @@ class ReplayBuffer:
         stack_size: int,
         update_horizon: int,
         gamma: float,
-        clipping: callable,
     ):
         self.add_count = 0
         self.max_capacity = max_capacity
@@ -85,7 +52,6 @@ class ReplayBuffer:
         self.stack_size = stack_size
         self.update_horizon = update_horizon
         self.gamma = gamma
-        self.clipping = clipping
 
         # Temporarily stores transitions before transfering them to the memory
         self.subtrajectory_tail = deque[TransitionElement](maxlen=self.update_horizon + self.stack_size)
@@ -179,7 +145,7 @@ class ReplayBuffer:
 
     def add(self, transition: TransitionElement):
         for replay_element in self.accumulate(transition):
-            self.memory[self.add_count] = replay_element.pack()
+            self.memory[self.add_count] = replay_element
             self.sampling_distribution.add(self.add_count)
             self.add_count += 1
 
@@ -193,7 +159,6 @@ class ReplayBuffer:
 
         sample_keys, importance_weights = self.sampling_distribution.sample(batch_size)
         replay_elements = operator.itemgetter(*sample_keys)(self.memory)
-        replay_elements = map(operator.methodcaller("unpack"), replay_elements)
         return jax.tree_util.tree_map(lambda *xs: np.stack(xs), *replay_elements), (sample_keys, importance_weights)
 
     def update(self, keys, loss):
