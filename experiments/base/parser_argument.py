@@ -119,9 +119,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         help="List of features for the actor.",
         default=[256, 256],
     )
-
-
-def add_tau(parser: argparse.ArgumentParser):
     parser.add_argument(
         "-tau",
         "--tau",
@@ -133,4 +130,4 @@ def add_tau(parser: argparse.ArgumentParser):
 
 @output_added_arguments
 def add_sac_arguments(parser: argparse.ArgumentParser):
-    add_tau(parser)
+    pass
