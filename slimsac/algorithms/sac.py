@@ -56,7 +56,7 @@ class SAC:
         self.cumulated_entropy_loss = 0
 
     def update_online_params(self, replay_buffer: ReplayBuffer, key):
-        batch_samples = replay_buffer.sample()
+        batch_samples, _ = replay_buffer.sample()
 
         (
             self.critic_params,
