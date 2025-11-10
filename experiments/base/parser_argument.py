@@ -100,7 +100,7 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         "-n",
         "--n_samples",
         type=int,
-        help="Number of collected samples.",
+        help="Total number of collected samples.",
         default=1_000_000,
     )
     parser.add_argument(
@@ -116,15 +116,15 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         "--features_pi",
         type=int,
         nargs="*",
-        help="List of features for the actor.",
+        help="List of features for the policy network.",
         default=[256, 256],
     )
     parser.add_argument(
         "-tau",
         "--tau",
-        help="Tau in target update.",
+        help="Soft target update parameter.",
         type=float,
-        default=5e-3,
+        default=0.005,
     )
 
 
