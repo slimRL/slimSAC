@@ -19,7 +19,7 @@ class SAC:
         update_horizon: int,
         tau: float,
         features_pi: list,
-        features_qf: list,
+        features_q: list,
     ):
         actor_key, critic_key = jax.random.split(key)
 
@@ -27,7 +27,7 @@ class SAC:
         action = jnp.zeros(action_dim, dtype=jnp.float32)
 
         # Critic (2 Q networks)
-        self.critic = CriticNet(features_qf)
+        self.critic = CriticNet(features_q)
         self.critic_params = jax.vmap(self.critic.init, in_axes=(0, None, None))(
             jax.random.split(critic_key, 2), obs, action
         )

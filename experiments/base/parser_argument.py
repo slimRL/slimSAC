@@ -105,7 +105,7 @@ def add_base_arguments(parser: argparse.ArgumentParser):
     )
     parser.add_argument(
         "-fq",
-        "--features_qf",
+        "--features_q",
         type=int,
         nargs="*",
         help="List of features for the Q-networks.",

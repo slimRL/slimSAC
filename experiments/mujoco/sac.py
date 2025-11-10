@@ -37,7 +37,7 @@ def run(argvs=sys.argv[1:]):
         update_horizon=p["update_horizon"],
         tau=p["tau"],
         features_pi=p["features_pi"],
-        features_qf=p["features_qf"],
+        features_q=p["features_q"],
     )
     train(train_key, p, agent, env, eval_env, rb)
 
