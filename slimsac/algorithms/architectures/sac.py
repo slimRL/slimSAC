@@ -35,7 +35,7 @@ class ActorNet(nn.Module):
         means = nn.Dense(self.action_dim)(x)
 
         if noise_key is None:  # deterministic
-            return means, 1
+            return means, None
         else:
             log_stds_unclipped = nn.Dense(self.action_dim)(x)
             log_stds = self.min_log_stds + (self.max_log_stds - self.min_log_stds) / 2 * (
