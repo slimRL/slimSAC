@@ -6,7 +6,7 @@
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**`slimSAC`** provides a concise and customizable implementation of Soft Actor-Critic (SAC) algorithm in Reinforcement Learning⛳ for MuJoCo and DMC environments. 
+**`slimSAC`** provides a concise and customizable implementation of Soft Actor-Critic (SAC) algorithm in Reinforcement Learning⛳ for MuJoCo and DeepMind Control Suite environments. 
 It enables to quickly code and run proof-of-concept type of experiments in off-policy Deep RL settings.
 
 ### 🚀 Key advantages
