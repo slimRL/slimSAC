@@ -48,7 +48,7 @@ class ActorNet(nn.Module):
 
             # Gaussian log-prob: -1/2 ((x - mean) / std)^2 -1/2 log(2 pi) -log(sigma)
             log_prob_uncorrected = (
-                -0.5 * jnp.square(action_pre_tanh / stds - means / stds) - 0.5 * jnp.log(2 * jnp.pi) - jnp.log(stds)
+                -0.5 * jnp.square(action_pre_tanh / stds - means / stds) - 0.5 * jnp.log(2 * jnp.pi) - log_stds
             )
 
             # d tanh^{-1}(y) / dy = 1 / (1 - y^2)
