@@ -1,7 +1,7 @@
 import jax
 import numpy as np
 from collections import deque
-from tqdm import tqdm
+from tqdm import trange
 
 from experiments.base.utils import save_data
 from slimsac.algorithms.sac import SAC
@@ -17,7 +17,7 @@ def train(key: jax.random.PRNGKey, p: dict, agent: SAC, env, eval_env, rb: Repla
     episode_return = 0
     episode_length = 0
 
-    for n_training_steps in tqdm(range(1, p["n_samples"] + 1)):
+    for n_training_steps in trange(1, p["n_samples"] + 1, desc="Training", miniters=10000, maxinterval=1000):
 
         key, update_key, exploration_key = jax.random.split(key, 3)
         reward, has_reset = collect_single_sample(exploration_key, env, agent, rb, p, n_training_steps)
