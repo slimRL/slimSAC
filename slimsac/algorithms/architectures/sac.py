@@ -35,12 +35,12 @@ class ActorNet(nn.Module):
         means = nn.Dense(self.action_dim)(x)
 
         if noise_key is None:  # deterministic
-            return means, None
+            return jnp.tanh(means), None
         else:
             log_stds_unclipped = nn.Dense(self.action_dim)(x)
             log_stds = self.min_log_stds + (self.max_log_stds - self.min_log_stds) / 2 * (
                 1 + nn.tanh(log_stds_unclipped)
-            )
+            )  # As performed in Simba, for stability
             stds = jnp.exp(log_stds)
 
             action_pre_tanh = means + stds * jax.random.normal(noise_key, shape=stds.shape)
