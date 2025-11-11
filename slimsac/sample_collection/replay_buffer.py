@@ -15,7 +15,7 @@ from slimsac.sample_collection.samplers import Uniform, Prioritized
 @dataclass
 class TransitionElement:
     observation: np.ndarray[np.float64]
-    action: np.float32
+    action: np.ndarray[np.float64]
     reward: np.float32
     is_terminal: bool
     episode_end: bool
@@ -25,7 +25,7 @@ class ReplayElement(struct.PyTreeNode):
     """A single replay transition element."""
 
     state: np.ndarray[np.float64]
-    action: np.float32
+    action: np.ndarray[np.float64]
     reward: np.float32
     next_state: np.ndarray[np.float64]
     is_terminal: bool
