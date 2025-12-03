@@ -46,7 +46,7 @@ class TestSAC(unittest.TestCase):
         next_q_values_double = jax.vmap(self.q.critic.apply, in_axes=(0, None, None))(
             self.q.critic_target_params, samples.next_state, next_actions
         )
-        next_q_values = jnp.min(next_q_values_double.squeeze(axis=-1), axis=0)
+        next_q_values = jnp.min(next_q_values_double, axis=0)
         computed_target = self.q.compute_target(samples, next_q_values, jnp.exp(self.q.log_ent_coef), next_log_probs)
 
         target = samples.reward + (1 - samples.is_terminal) * (self.q.gamma**self.q.update_horizon) * (
@@ -60,14 +60,13 @@ class TestSAC(unittest.TestCase):
         samples = self.generator.samples(self.key)
 
         next_actions, next_log_probs = self.q.actor.apply(self.q.actor_params, samples.next_state, self.key)
-        q_values_ = jax.vmap(self.q.critic.apply, in_axes=(0, None, None))(
+        q_values = jax.vmap(self.q.critic.apply, in_axes=(0, None, None))(
             self.q.critic_params, samples.state, samples.action
         )
-        q_values = q_values_.squeeze(axis=-1)
         next_q_values_double = jax.vmap(self.q.critic.apply, in_axes=(0, None, None))(
             self.q.critic_target_params, samples.next_state, next_actions
         )
-        next_q_values = jnp.min(next_q_values_double.squeeze(axis=-1), axis=0)
+        next_q_values = jnp.min(next_q_values_double, axis=0)
         targets_ = self.q.compute_target(samples, next_q_values, jnp.exp(self.q.log_ent_coef), next_log_probs)
         targets = jnp.repeat(targets_[jnp.newaxis], 2, axis=0)
         critic_loss = jnp.square(q_values - targets).mean()
@@ -90,7 +89,7 @@ class TestSAC(unittest.TestCase):
         q_values_double = jax.vmap(self.q.critic.apply, in_axes=(0, None, None))(
             self.q.critic_params, samples.state, actions
         )
-        q_values = jnp.min(q_values_double.squeeze(axis=-1), axis=0)
+        q_values = jnp.min(q_values_double, axis=0)
         losses = jnp.exp(self.q.log_ent_coef) * log_probs - q_values
 
         computed_actor_loss_terms = self.q.actor_loss_on_batch(

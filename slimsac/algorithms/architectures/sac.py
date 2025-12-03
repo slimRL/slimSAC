@@ -15,8 +15,7 @@ class CriticNet(nn.Module):
         for n_units in self.features:
             x = nn.Dense(n_units)(x)
             x = nn.relu(x)
-        x = nn.Dense(1)(x)
-        return x
+        return nn.Dense(1)(x).squeeze(axis=-1)
 
 
 class ActorNet(nn.Module):

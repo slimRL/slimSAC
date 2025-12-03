@@ -2,20 +2,12 @@
 
 ![python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue)
 ![jax_badge][jax_badge_link]
-![Static Badge](https://img.shields.io/badge/lines%20of%20code-3060-green)
+![Static Badge](https://img.shields.io/badge/lines%20of%20code-846-green)
 <a href="https://github.com/psf/black"><img alt="Code style: black" src="https://img.shields.io/badge/code%20style-black-000000.svg"></a>
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 **`slimSAC`** provides a concise and customizable implementation of Soft Actor-Critic (SAC) algorithm in Reinforcement Learning⛳ for MuJoCo and DeepMind Control Suite environments. 
 It enables to quickly code and run proof-of-concept type of experiments in off-policy Deep RL settings.
-
-### 🚀 Key advantages
-✅ Easy to read - clears the clutter with minimal lines of code 🧹\
-✅ Easy to experiment - flexible to play with algorithms and environments 📊\
-✅ Fast to run - jax accleration, support for GPU and multiprocessing ⚡
-
-
-Let's dive in!
 
 ## User installation
 GPU installation:
