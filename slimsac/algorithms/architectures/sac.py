@@ -15,8 +15,7 @@ class CriticNet(nn.Module):
         for n_units in self.features:
             x = nn.Dense(n_units)(x)
             x = nn.relu(x)
-        x = nn.Dense(1)(x)
-        return x
+        return nn.Dense(1)(x).squeeze(axis=-1)
 
 
 class ActorNet(nn.Module):
@@ -35,12 +34,12 @@ class ActorNet(nn.Module):
         means = nn.Dense(self.action_dim)(x)
 
         if noise_key is None:  # deterministic
-            return means, 1
+            return jnp.tanh(means), None
         else:
             log_stds_unclipped = nn.Dense(self.action_dim)(x)
             log_stds = self.min_log_stds + (self.max_log_stds - self.min_log_stds) / 2 * (
                 1 + nn.tanh(log_stds_unclipped)
-            )
+            )  # As performed in Simba, for stability
             stds = jnp.exp(log_stds)
 
             action_pre_tanh = means + stds * jax.random.normal(noise_key, shape=stds.shape)
@@ -48,7 +47,7 @@ class ActorNet(nn.Module):
 
             # Gaussian log-prob: -1/2 ((x - mean) / std)^2 -1/2 log(2 pi) -log(sigma)
             log_prob_uncorrected = (
-                -0.5 * jnp.square(action_pre_tanh / stds - means / stds) - 0.5 * jnp.log(2 * jnp.pi) - jnp.log(stds)
+                -0.5 * jnp.square(action_pre_tanh / stds - means / stds) - 0.5 * jnp.log(2 * jnp.pi) - log_stds
             )
 
             # d tanh^{-1}(y) / dy = 1 / (1 - y^2)

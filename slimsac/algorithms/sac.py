@@ -1,4 +1,5 @@
 from functools import partial
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -19,7 +20,7 @@ class SAC:
         update_horizon: int,
         tau: float,
         features_pi: list,
-        features_qf: list,
+        features_q: list,
     ):
         actor_key, critic_key = jax.random.split(key)
 
@@ -27,7 +28,7 @@ class SAC:
         action = jnp.zeros(action_dim, dtype=jnp.float32)
 
         # Critic (2 Q networks)
-        self.critic = CriticNet(features_qf)
+        self.critic = CriticNet(features_q)
         self.critic_params = jax.vmap(self.critic.init, in_axes=(0, None, None))(
             jax.random.split(critic_key, 2), obs, action
         )
@@ -56,7 +57,7 @@ class SAC:
         self.cumulated_entropy_loss = 0
 
     def update_online_params(self, replay_buffer: ReplayBuffer, key):
-        batch_samples = replay_buffer.sample()
+        batch_samples, _ = replay_buffer.sample()
 
         (
             self.critic_params,
@@ -144,16 +145,15 @@ class SAC:
     def critic_loss_on_batch(self, critic_params, critic_target_params, actor_params, log_ent_coef, samples, key):
         next_actions, next_log_probs = self.actor.apply(actor_params, samples.next_state, key)
 
-        # shape (2, batch_size, 1)
-        q_values_ = jax.vmap(self.critic.apply, in_axes=(0, None, None))(critic_params, samples.state, samples.action)
-        q_values = q_values_.squeeze(axis=-1)
+        # shape (2, batch_size)
+        q_values = jax.vmap(self.critic.apply, in_axes=(0, None, None))(critic_params, samples.state, samples.action)
 
-        # shape (2, batch_size, 1)
+        # shape (2, batch_size)
         next_q_values_double = jax.vmap(self.critic.apply, in_axes=(0, None, None))(
             critic_target_params, samples.next_state, next_actions
         )
         # shape (batch_size)
-        next_q_values = jnp.min(next_q_values_double.squeeze(axis=-1), axis=0)
+        next_q_values = jnp.min(next_q_values_double, axis=0)
 
         # shape (batch_size)
         targets_ = self.compute_target(samples, next_q_values, jnp.exp(log_ent_coef), next_log_probs)
@@ -172,10 +172,10 @@ class SAC:
     def actor_loss_on_batch(self, actor_params, critic_params, log_ent_coef, samples, key):
         actions, log_probs = self.actor.apply(actor_params, samples.state, key)
 
-        # shape (2, batch_size, 1)
+        # shape (2, batch_size)
         q_values_double = jax.vmap(self.critic.apply, in_axes=(0, None, None))(critic_params, samples.state, actions)
         # shape (batch_size)
-        q_values = jnp.min(q_values_double.squeeze(axis=-1), axis=0)
+        q_values = jnp.min(q_values_double, axis=0)
 
         losses = jnp.exp(log_ent_coef) * log_probs - q_values
         return losses.mean(), -log_probs.mean()

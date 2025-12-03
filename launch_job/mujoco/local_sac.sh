@@ -9,10 +9,10 @@ if ! tmux has-session -t slimsac; then
 fi
 
 tmux send-keys -t slimsac "cd $(pwd)" ENTER
+
 tmux send-keys -t slimsac "source env/bin/activate" ENTER
 FRACTION_GPU=$(echo "scale=2 ; 1 / ($LAST_SEED - $FIRST_SEED + 1)" | bc)
 tmux send-keys -t slimsac "export XLA_PYTHON_CLIENT_MEM_FRACTION=$FRACTION_GPU" ENTER
-
 
 echo "launch train $ALGO_NAME local"
 for (( seed=$FIRST_SEED; seed<=$LAST_SEED; seed++ ))
