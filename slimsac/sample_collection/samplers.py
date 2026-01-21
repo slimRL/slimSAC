@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from slimsac.sample_collection.sum_tree import SumTree
+from slimdqn.sample_collection.sum_tree import SumTree
 
 
 class Uniform:
@@ -34,7 +34,10 @@ class Uniform:
 
     def sample(self, size: int):
         indices = self.rng.integers(len(self.index_to_key), size=size)
-        return np.array([self.index_to_key[index] for index in indices], dtype=np.int32), None
+        return np.array([self.index_to_key[index] for index in indices], dtype=np.int32), np.ones(size)
+
+    def update(self, keys, loss):
+        pass
 
 
 class Prioritized(Uniform):
@@ -71,7 +74,7 @@ class Prioritized(Uniform):
             return super().sample(size)
 
         targets = self.rng.uniform(0.0, self.sum_tree.root, size=size)
-        indices = self.sum_tree.query(targets)
+        indices = self.sum_tree.query(targets, len(self.index_to_key) - 1)
         probabilities = self.sum_tree.get(indices)
         importance_weights = 1.0 / np.sqrt(probabilities + 1e-10)  # beta = 0.5
         importance_weights /= np.max(importance_weights)
