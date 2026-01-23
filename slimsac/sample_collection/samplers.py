@@ -3,7 +3,7 @@
 
 import numpy as np
 
-from slimdqn.sample_collection.sum_tree import SumTree
+from slimsac.sample_collection.sum_tree import SumTree
 
 
 class Uniform:

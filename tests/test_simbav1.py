@@ -13,9 +13,7 @@ class TestSAC(unittest.TestCase):
         self.random_seed = np.random.randint(1000)
         self.key = jax.random.PRNGKey(self.random_seed)
 
-        key_obs_dim, key_actions, key_feature_pi_1, key_feature_pi_2, key_feature_q_1, key_feature_q_2 = (
-            jax.random.split(self.key, 6)
-        )
+        key_obs_dim, key_actions, key_feature_pi, key_feature_q = jax.random.split(self.key, 4)
         self.observation_dim = (int(jax.random.randint(key_obs_dim, (), minval=5, maxval=10)),)
         self.n_actions = int(jax.random.randint(key_actions, (), minval=2, maxval=10))
         self.q = SAC(
@@ -26,15 +24,9 @@ class TestSAC(unittest.TestCase):
             0.94,
             1,
             0.5,
-            "fc",
-            [
-                jax.random.randint(key_feature_pi_1, (), minval=1, maxval=10),
-                jax.random.randint(key_feature_pi_2, (), minval=1, maxval=10),
-            ],
-            [
-                jax.random.randint(key_feature_q_1, (), minval=1, maxval=10),
-                jax.random.randint(key_feature_q_2, (), minval=1, maxval=10),
-            ],
+            "simbav1",
+            [jax.random.randint(key_feature_pi, (), minval=10, maxval=100)],
+            [jax.random.randint(key_feature_q, (), minval=10, maxval=100)],
             True,
             0.1,
         )

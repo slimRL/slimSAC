@@ -117,19 +117,25 @@ class SAC:
         critic_loss, critic_grads = jax.value_and_grad(self.critic_loss_on_batch)(
             critic_params, critic_target_params, actor_params, log_ent_coef, batch_samples, critic_key
         )
-        critic_updates, critic_optimizer_state = self.critic_optimizer.update(critic_grads, critic_optimizer_state)
+        critic_updates, critic_optimizer_state = self.critic_optimizer.update(
+            critic_grads, critic_optimizer_state, critic_params
+        )
         critic_params = optax.apply_updates(critic_params, critic_updates)
 
         # Update actor
         (actor_loss, entropy), actor_grads = jax.value_and_grad(self.actor_loss_on_batch, has_aux=True)(
             actor_params, critic_params, log_ent_coef, batch_samples, actor_key
         )
-        actor_updates, actor_optimizer_state = self.actor_optimizer.update(actor_grads, actor_optimizer_state)
+        actor_updates, actor_optimizer_state = self.actor_optimizer.update(
+            actor_grads, actor_optimizer_state, actor_params
+        )
         actor_params = optax.apply_updates(actor_params, actor_updates)
 
         # Update entropy coefficient
         entropy_loss, entropy_grads = jax.value_and_grad(self.entropy_loss)(log_ent_coef, entropy)
-        entropy_updates, entropy_optimizer_state = self.entropy_optimizer.update(entropy_grads, entropy_optimizer_state)
+        entropy_updates, entropy_optimizer_state = self.entropy_optimizer.update(
+            entropy_grads, entropy_optimizer_state, log_ent_coef
+        )
         log_ent_coef = optax.apply_updates(log_ent_coef, entropy_updates)
 
         # Update critic target
