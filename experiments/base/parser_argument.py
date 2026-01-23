@@ -104,6 +104,14 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         default=1_000_000,
     )
     parser.add_argument(
+        "-at",
+        "--architecture_type",
+        help="Type of architecture.",
+        type=str,
+        default="fc",
+        choices=["fc", "simbav1"],
+    )
+    parser.add_argument(
         "-fq",
         "--features_q",
         type=int,
@@ -120,11 +128,24 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         default=[256, 256],
     )
     parser.add_argument(
+        "-wd",
+        "--weight_decay",
+        help="Weighting of the regularization in weight decay.",
+        type=float,
+        default=0,
+    )
+    parser.add_argument(
         "-tau",
         "--tau",
         help="Soft target update parameter.",
         type=float,
         default=0.005,
+    )
+    parser.add_argument(
+        "--double_q",
+        help="Whether to combat overestimation with a twin Q-network.",
+        default=False,
+        action="store_true",
     )
 
 

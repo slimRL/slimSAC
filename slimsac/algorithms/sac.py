@@ -6,6 +6,7 @@ import numpy as np
 import optax
 
 from slimsac.algorithms.architectures.sac import CriticNet, ActorNet
+from slimsac.algorithms.architectures.simbav1 import SimbaV1CriticNet, SimbaV1ActorNet, update_mean_var_stats
 from slimsac.sample_collection.replay_buffer import ReplayBuffer, ReplayElement
 
 
@@ -19,8 +20,11 @@ class SAC:
         gamma: float,
         update_horizon: int,
         tau: float,
+        architecture_type: str,
         features_pi: list,
         features_q: list,
+        double_q: bool,
+        weight_decay: float,
     ):
         actor_key, critic_key = jax.random.split(key)
 
@@ -28,23 +32,29 @@ class SAC:
         action = jnp.zeros(action_dim, dtype=jnp.float32)
 
         # Critic (2 Q networks)
-        self.critic = CriticNet(features_q)
+        self.double_q = double_q
+        self.architecture_type = architecture_type
+        self.critic = CriticNet(features_q) if architecture_type == "fc" else SimbaV1CriticNet(features_q[0])
         self.critic_params = jax.vmap(self.critic.init, in_axes=(0, None, None))(
-            jax.random.split(critic_key, 2), obs, action
+            jax.random.split(critic_key, 2 if double_q else 1), obs, action
         )
         self.critic_target_params = self.critic_params.copy()
-        self.critic_optimizer = optax.adam(learning_rate)
+        self.critic_optimizer = optax.adamw(learning_rate, weight_decay=weight_decay)
         self.critic_optimizer_state = self.critic_optimizer.init(self.critic_params)
 
         # Actor
-        self.actor = ActorNet(features_pi, action_dim)
+        self.actor = (
+            ActorNet(features_pi, action_dim)
+            if architecture_type == "fc"
+            else SimbaV1ActorNet(features_pi[0], action_dim)
+        )
         self.actor_params = self.actor.init(actor_key, obs, jax.random.PRNGKey(0))
-        self.actor_optimizer = optax.adam(learning_rate)
+        self.actor_optimizer = optax.adamw(learning_rate, weight_decay=weight_decay)
         self.actor_optimizer_state = self.actor_optimizer.init(self.actor_params)
 
         # Entropy coefficient
         self.log_ent_coef = jnp.log(1.0)
-        self.entropy_optimizer = optax.adam(learning_rate)
+        self.entropy_optimizer = optax.adamw(learning_rate, weight_decay=weight_decay)
         self.entropy_optimizer_state = self.entropy_optimizer.init(self.log_ent_coef)
         self.target_entropy = -np.float32(action_dim)
 
@@ -145,10 +155,10 @@ class SAC:
     def critic_loss_on_batch(self, critic_params, critic_target_params, actor_params, log_ent_coef, samples, key):
         next_actions, next_log_probs = self.actor.apply(actor_params, samples.next_state, key)
 
-        # shape (2, batch_size)
+        # shape (2, batch_size) | (1, batch_size)
         q_values = jax.vmap(self.critic.apply, in_axes=(0, None, None))(critic_params, samples.state, samples.action)
 
-        # shape (2, batch_size)
+        # shape (2, batch_size) | (1, batch_size)
         next_q_values_double = jax.vmap(self.critic.apply, in_axes=(0, None, None))(
             critic_target_params, samples.next_state, next_actions
         )
@@ -158,7 +168,7 @@ class SAC:
         # shape (batch_size)
         targets_ = self.compute_target(samples, next_q_values, jnp.exp(log_ent_coef), next_log_probs)
         # shape (2, batch_size)
-        targets = jnp.repeat(targets_[jnp.newaxis], 2, axis=0)
+        targets = jnp.repeat(targets_[jnp.newaxis], 2 if self.double_q else 1, axis=0)
 
         return jnp.square(q_values - targets).mean()
 
@@ -172,7 +182,7 @@ class SAC:
     def actor_loss_on_batch(self, actor_params, critic_params, log_ent_coef, samples, key):
         actions, log_probs = self.actor.apply(actor_params, samples.state, key)
 
-        # shape (2, batch_size)
+        # shape (2, batch_size) | (1, batch_size)
         q_values_double = jax.vmap(self.critic.apply, in_axes=(0, None, None))(critic_params, samples.state, actions)
         # shape (batch_size)
         q_values = jnp.min(q_values_double, axis=0)
@@ -188,14 +198,21 @@ class SAC:
         # only return the action
         return self.actor.apply(actor_params, state, key)[0]
 
+    def update_observation_statistics(self, state):
+        if self.architecture_type == "simbav1":
+            self.critic_params["running_obs_stats"]["RSObservationNorm_0"] = update_mean_var_stats(
+                state.squeeze(), self.critic_params["running_obs_stats"]["RSObservationNorm_0"]
+            )
+            self.critic_target_params["running_obs_stats"] = self.critic_params["running_obs_stats"]
+            self.actor_params["running_obs_stats"] = self.critic_params["running_obs_stats"]
+
     def get_logs(self):
-        logs = {
+        return {
             "train/critic_loss": self.cumulated_critic_loss,
             "train/actor_loss": self.cumulated_actor_loss,
             "train/entropy_loss": self.cumulated_entropy_loss,
             "train/entropy_coef": np.exp(self.log_ent_coef),
         }
-        return logs
 
     def get_model(self):
         return {"critic": self.critic_params, "actor": self.actor_params, "log_ent_coef": self.log_ent_coef}

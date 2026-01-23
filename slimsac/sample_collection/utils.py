@@ -2,6 +2,7 @@ from slimsac.sample_collection.replay_buffer import ReplayBuffer, TransitionElem
 
 
 def collect_single_sample(key, env, agent, rb: ReplayBuffer, p, n_training_steps: int):
+    agent.update_observation_statistics(env.state)
     if n_training_steps <= p["n_initial_samples"]:
         action = env.random_action()
     else:

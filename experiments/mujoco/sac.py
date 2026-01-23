@@ -36,8 +36,11 @@ def run(argvs=sys.argv[1:]):
         gamma=p["gamma"],
         update_horizon=p["update_horizon"],
         tau=p["tau"],
+        architecture_type=p["architecture_type"],
         features_pi=p["features_pi"],
         features_q=p["features_q"],
+        double_q=p["double_q"],
+        weight_decay=p["weight_decay"],
     )
     train(train_key, p, agent, env, eval_env, rb)
 
