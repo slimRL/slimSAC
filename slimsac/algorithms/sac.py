@@ -210,7 +210,10 @@ class SAC:
                 state.squeeze(), self.critic_params["running_obs_stats"]["RSObservationNorm_0"]
             )
             self.critic_target_params["running_obs_stats"] = self.critic_params["running_obs_stats"]
-            self.actor_params["running_obs_stats"] = self.critic_params["running_obs_stats"]
+            # Take the first element due to double Q
+            self.actor_params["running_obs_stats"] = jax.tree.map(
+                lambda x: x[0], self.critic_params["running_obs_stats"]
+            )
 
     def get_logs(self):
         return {
