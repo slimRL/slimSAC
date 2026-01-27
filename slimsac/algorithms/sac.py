@@ -53,10 +53,10 @@ class SAC:
         self.actor_optimizer_state = self.actor_optimizer.init(self.actor_params)
 
         # Entropy coefficient
-        self.log_ent_coef = jnp.log(1.0)
+        self.log_ent_coef = jnp.log(1.0 if architecture_type == "fc" else 0.01)
         self.entropy_optimizer = optax.adamw(learning_rate, weight_decay=weight_decay)
         self.entropy_optimizer_state = self.entropy_optimizer.init(self.log_ent_coef)
-        self.target_entropy = -np.float32(action_dim)
+        self.target_entropy = -np.float32(action_dim) / (1 if architecture_type == "fc" else 2)
 
         self.gamma = gamma
         self.update_horizon = update_horizon
