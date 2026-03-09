@@ -26,7 +26,6 @@ class TestSAC(unittest.TestCase):
             0.94,
             1,
             0.5,
-            "fc",
             [
                 jax.random.randint(key_feature_pi_1, (), minval=1, maxval=10),
                 jax.random.randint(key_feature_pi_2, (), minval=1, maxval=10),
@@ -36,7 +35,6 @@ class TestSAC(unittest.TestCase):
                 jax.random.randint(key_feature_q_2, (), minval=1, maxval=10),
             ],
             True,
-            0.1,
         )
 
         self.generator = Generator(10, self.observation_dim, self.n_actions)

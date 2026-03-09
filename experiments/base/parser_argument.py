@@ -104,14 +104,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         default=1_000_000,
     )
     parser.add_argument(
-        "-at",
-        "--architecture_type",
-        help="Type of architecture.",
-        type=str,
-        default="fc",
-        choices=["fc", "simbav1"],
-    )
-    parser.add_argument(
         "-fq",
         "--features_q",
         type=int,
@@ -126,13 +118,6 @@ def add_base_arguments(parser: argparse.ArgumentParser):
         nargs="*",
         help="List of features for the policy network.",
         default=[256, 256],
-    )
-    parser.add_argument(
-        "-wd",
-        "--weight_decay",
-        help="Weighting of the regularization in weight decay.",
-        type=float,
-        default=0,
     )
     parser.add_argument(
         "-tau",
